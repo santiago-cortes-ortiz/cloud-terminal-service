@@ -133,6 +133,7 @@ jobs:
           class AwsTerminal < Formula
             desc "Terminal UI for creating and managing AWS resources"
             homepage "https://github.com/${GITHUB_REPOSITORY}"
+            license "MIT"
             version "${version}"
 
             on_macos do
@@ -200,6 +201,7 @@ jobs:
               "version": "${version}",
               "description": "Terminal UI for creating and managing AWS resources",
               "homepage": "https://github.com/${GITHUB_REPOSITORY}",
+              "license": "MIT",
               "architecture": {
                   "64bit": {
                       "url": "${url}",

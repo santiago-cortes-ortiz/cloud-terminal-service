@@ -1,77 +1,38 @@
 # aws-terminal
 
-Terminal UI for creating and managing AWS resources with Go and Bubble Tea.
+[![CI](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml)
+[![Release](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/ShAd0W20/aws-terminal?sort=semver)](https://github.com/ShAd0W20/aws-terminal/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Stack
+A keyboard-first terminal UI for working with AWS resources from your local shell.
 
-- Go
-- Bubble Tea
-- Bubbles
-- Lip Gloss
-- AWS SDK for Go v2
+`aws-terminal` uses your existing AWS profiles, supports native AWS SSO device-flow login, and provides guided workflows for common AWS tasks without requiring you to remember every CLI command.
 
-## Structure
+## Features
 
-```text
-cmd/aws-terminal                     # application entrypoint
-internal/app                         # dependency wiring, app page registry, and program bootstrap
-internal/domain/auth                 # native SSO device-flow domain types
-internal/domain/cloudfront           # CloudFront distribution/invalidation entities
-internal/domain/ecr                  # ECR repositories/images and Docker push entities
-internal/domain/profile              # profile entities and authentication mode
-internal/domain/region               # AWS region catalog/types
-internal/domain/s3                   # S3 bucket and sync plan entities
-internal/domain/session              # active AWS session/account state
-internal/application/authentication  # SSO authentication use cases
-internal/application/cloudfront      # CloudFront listing/invalidation use cases
-internal/application/ecr             # ECR repository/image and Docker push use cases
-internal/application/s3              # S3 listing, source inspection, sync planning, sync execution
-internal/application/session         # profile/session use cases and ports
-internal/infrastructure/awsclients    # shared AWS SDK client factory/cache
-internal/infrastructure/awscloudfront # AWS SDK CloudFront adapter
-internal/infrastructure/awsconfig     # shared config parsing and STS identity resolution
-internal/infrastructure/awsecr       # AWS SDK private ECR adapter
-internal/infrastructure/awss3        # AWS SDK S3 adapters
-internal/infrastructure/localdocker  # Docker Engine API adapter
-internal/infrastructure/awssso       # native AWS SSO OIDC device-flow implementation
-internal/ui/pageapi                  # shared Page contract and page messages/state
-internal/ui/workflow                 # reusable page workflow helpers
-internal/ui/shell                    # Bubble Tea shell model, update loop, keymap
-internal/ui/components               # reusable layout components (header, footer, sidebar)
-internal/ui/pages                    # page implementations and page type re-exports
-internal/ui/pages/s3                 # S3 workflow page
-internal/ui/pages/cloudfront         # CloudFront workflow page
-internal/ui/pages/ecr                # ECR workflow page
-internal/ui/styles                   # shared Lip Gloss theme and rendering helpers
-```
-
-## Architecture
-
-The project is organized to stay scalable as more AWS workflows are added:
-
-- **domain**: core types with no UI or AWS SDK knowledge
-- **application**: use cases and small interfaces
-- **infrastructure**: AWS SDK and native SSO/OIDC adapters
-- **ui**: Bubble Tea shell, reusable components, page contracts, and page rendering
-
-Concrete page composition lives in `internal/app/pages.go`, so `internal/ui/shell` remains page-agnostic. The current app page registry includes Dashboard, S3, CloudFront, and ECR.
-
-This keeps the TUI separate from authentication, AWS config loading, and future resource creation services.
+- Discover AWS profiles from shared config/credentials files.
+- Native AWS SSO OIDC device-flow login without shelling out to the AWS CLI.
+- Resolve the active caller identity and region for the selected profile.
+- List S3 buckets and sync local files/folders to S3 with an explicit review step.
+- Optional S3 delete mode that must be enabled before destructive changes run.
+- Static-site-oriented S3 upload metadata, including frontend content-type fallbacks and cache-control presets.
+- List CloudFront distributions and create/poll invalidations.
+- List/search private ECR repositories, create repositories, and push local Docker images.
+- Bubble Tea powered TUI with keyboard navigation and cancellable long-running workflows.
 
 ## Install
 
-### Install script
-
-macOS and Linux users can install the latest release directly from GitHub Releases:
+### macOS and Linux install script
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | bash
 ```
 
-To install a specific version or location:
+Install a specific version or location:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" bash
+curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | VERSION=v0.1.1 INSTALL_DIR="$HOME/.local/bin" bash
 ```
 
 ### Homebrew
@@ -80,8 +41,6 @@ curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.
 brew install ShAd0W20/tap/aws-terminal
 ```
 
-The tap is updated by the release workflow when `PACKAGE_REPO_TOKEN` is configured and `ShAd0W20/homebrew-tap` exists.
-
 ### Scoop
 
 ```powershell
@@ -89,222 +48,210 @@ scoop bucket add shadow20 https://github.com/ShAd0W20/scoop-bucket
 scoop install aws-terminal
 ```
 
-The Scoop bucket is updated by the release workflow when `PACKAGE_REPO_TOKEN` is configured and `ShAd0W20/scoop-bucket` exists.
+### Manual download
 
-## Run
+Download prebuilt binaries from the [latest GitHub Release](https://github.com/ShAd0W20/aws-terminal/releases/latest).
 
-```bash
-go run ./cmd/aws-terminal
-```
-
-## AWS profiles and SSO
-
-- Profiles are loaded from your local AWS shared config/credentials files.
-- In the TUI, switch focus between **Profiles**, **Regions**, and **Pages** with `tab`.
-- Use `shift+tab` to move focus back.
-- Use `↑/↓` to move within the focused section.
-- Press `enter` on a region to make it the active region for the session and upcoming workflows.
-- The left sidebar uses fixed-height `bubbles/list` panes for Profiles, Regions, and Pages.
-- Press `enter` on a profile to activate it in the selected region. For AWS SSO profiles, the app first reuses or refreshes the cached SSO session when available and only opens the browser/device login when a new sign-in is needed.
-- Press `enter` on **Pages** to move into the active page workflow.
-- For AWS SSO profiles, the app uses the native AWS SSO OIDC device flow directly from Go when the cached session cannot be reused.
-- The TUI stays visible while SSO cache checks or authentication runs.
-- The selected region is shown in the sidebar, footer, and dashboard.
-- The dashboard shows the verification URL, one-time user code, and browser-open status.
-- After approval completes, the app writes the AWS SSO token cache and resolves the active caller identity. Future launches reuse that cache until AWS expires it or it can no longer be refreshed.
-- Your AWS SSO profiles still need to be configured in `~/.aws/config`.
-- The AWS CLI is no longer required for the login flow itself.
-
-## S3 sync workflow
-
-The first interactive resource workflow is the **S3 Buckets** page.
-
-### Current capabilities
-
-- List buckets available to the active authenticated profile.
-- Choose a destination bucket from inside the page.
-- Browse your local machine with the Bubbles file picker.
-- Select either a **file** or a **folder** as the source.
-- Enter an optional S3 prefix.
-- Build a sync review step before execution.
-- Explicitly toggle delete behavior on/off before running the sync.
-- Execute the sync asynchronously and show in-page status/progress updates.
-- After a successful sync, optionally jump into CloudFront invalidation.
-
-### Page flow
-
-1. Authenticate a profile and pick a region.
-2. Open the **S3 Buckets** page from the sidebar.
-3. Press `enter` while the Pages pane is focused to move into the active page.
-4. Select the destination bucket.
-5. Browse for a local source path.
-6. Enter an optional destination prefix.
-7. Review the sync plan.
-8. Toggle delete behavior if needed.
-9. Confirm and run the sync.
-10. After success, press `i` if you want to continue into CloudFront invalidation.
-
-### S3 page keys
-
-#### Bucket selection
-
-- `↑/k` move up
-- `↓/j` move down
-- `enter` choose bucket
-- `tab` or `shift+tab` return focus to Pages
-
-#### File picker
-
-- `right` or `l` open directory
-- `enter` or `space` select the highlighted file or folder
-- `backspace` go to parent directory
-- `b` go back to bucket selection
-
-#### Prefix / review / sync
-
-- `enter` continue / confirm
-- `space` toggle delete on the review screen
-- `b` go back one step
-- `i` open CloudFront after a successful sync prompt
-- `tab` or `shift+tab` return focus to Pages
-
-## ECR private repository workflow
-
-The **ECR** page supports private ECR repositories only for now.
-
-### Current capabilities
-
-- List and search private ECR repositories for the active authenticated profile/region.
-- Create a private ECR repository from the page when needed.
-- Select a repository and view existing image tags/digests.
-- List local Docker images through the Docker Engine API.
-- Manually type a local Docker image reference if discovery is unavailable or incomplete.
-- Edit the destination tag before pushing.
-- Retrieve ECR authorization, tag the local image for the selected repository, push it, and show progress.
-
-### ECR page keys
-
-- `↑/k` and `↓/j` move through repository/local image lists.
-- `enter` select/continue/confirm.
-- `ctrl+f` focus repository search; `esc` leaves search.
-- `n` create a repository from the repository step.
-- `r` refresh repositories, repository images, or local Docker images depending on the current step.
-- `b` or `esc` go back; during push it cancels waiting for the running push context.
-- `tab` or `shift+tab` return focus to Pages.
-
-### ECR manual verification
-
-1. Run `go run ./cmd/aws-terminal`.
-2. Select the AWS profile and region that should own the private ECR repository.
-3. Open the **ECR** page.
-4. Press `ctrl+f` to search for an existing repository or press `n` to create a test repository.
-5. Confirm repository images are displayed.
-6. Ensure Docker is running locally.
-7. Select a discovered local image, or type a local image reference manually.
-8. Edit the destination tag.
-9. Review and confirm the push.
-10. Verify the image appears in private ECR, for example:
-
-    ```bash
-    aws ecr describe-images --repository-name <repo> --profile <profile> --region <region>
-    ```
-
-## CloudFront invalidation workflow
-
-- Open the **CloudFront** page directly from the sidebar, or press `i` after a successful S3 sync.
-- Select a distribution.
-- Enter one or more invalidation paths such as `/*` or `/assets/* /index.html`.
-- Press `enter` to create the invalidation.
-- Press `c` to copy the equivalent AWS CLI command to your clipboard.
-
-## Sync behavior notes
-
-- The delete option is **never implicit**. It must be explicitly enabled on the confirmation screen.
-- When the selected source is a **single file**, delete is automatically disabled.
-- The current sync planning compares local files to remote objects by destination key and size.
-- Folder sync preserves relative paths under the chosen prefix.
-- An empty prefix means the bucket root.
-
-## Expected manual verification flow
-
-Use real configured profiles and buckets on your own machine.
-
-### Example targets
-
-- `dev` profile syncing into `s3://example-dev-bucket/`
-- `prod` profile syncing into `s3://example-prod-bucket/`
-
-### Manual verification checklist
-
-1. Run the app:
-
-   ```bash
-   go run ./cmd/aws-terminal
-   ```
-
-2. Select the region that matches the bucket you want to use.
-3. Authenticate either `pre`, `prod`, or another configured profile.
-4. Open the **S3 Buckets** page.
-5. Confirm the expected bucket appears in the list.
-6. Choose the bucket.
-7. Use the file picker to select a folder such as:
-
-   ```text
-   dist/example-app/browser
-   ```
-
-8. Leave the prefix empty to target bucket root, or enter a prefix such as:
-
-   ```text
-   browser
-   ```
-
-9. Review the plan.
-10. Confirm delete is **off** first and run a safe sync.
-11. Validate objects in AWS or with the AWS CLI, for example:
-
-    ```bash
-    aws s3 ls s3://example-dev-bucket/ --profile dev
-    aws s3 ls s3://example-prod-bucket/ --profile prod
-    ```
-
-12. Run the workflow again with delete **on** only after reviewing the listed deletions.
-13. Compare the behavior with your existing CLI workflow:
-
-    ```bash
-    aws s3 sync dist/example-app/browser s3://example-dev-bucket/ --delete --profile dev
-    aws s3 sync dist/example-app/browser s3://example-prod-bucket/ --delete --profile prod
-    ```
-
-## Release process
-
-CI runs on pushes to `main` and pull requests with formatting, tests, and build checks.
-
-Release builds run only when a version tag is pushed:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-The release workflow runs tests first, then builds archives for:
+Published targets:
 
 - Windows amd64
 - Linux amd64
 - macOS arm64
 - macOS amd64
 
-It creates a GitHub Release for the tag, enables GitHub-generated release notes, and uploads the binaries plus checksums. Use conventional commit messages to make the generated changelog more useful.
+## Quick start
 
-If the `PACKAGE_REPO_TOKEN` secret is configured, the release workflow also updates:
+```bash
+aws-terminal
+```
 
-- `ShAd0W20/homebrew-tap` with `Formula/aws-terminal.rb`
-- `ShAd0W20/scoop-bucket` with `bucket/aws-terminal.json`
+Or run from source:
 
-To enable package repository updates, create those two repositories and add a fine-grained GitHub token named `PACKAGE_REPO_TOKEN` to this repository's Actions secrets with write access to both package repositories.
+```bash
+go run ./cmd/aws-terminal
+```
 
-## Development status
+The app reads the same AWS configuration files used by the AWS CLI:
 
-- The S3, CloudFront, and ECR pages are implemented and wired through the app page registry.
-- The app builds successfully with `go build ./...`.
-- Real AWS verification still depends on local profiles, buckets, and manual execution in your environment.
+- `~/.aws/config`
+- `~/.aws/credentials`
+
+Environment overrides such as `AWS_CONFIG_FILE` and `AWS_SHARED_CREDENTIALS_FILE` are also respected.
+
+## Navigation
+
+Global controls:
+
+| Key | Action |
+| --- | --- |
+| `tab` | Move focus forward through Profiles, Regions, Pages, and the active page workflow |
+| `shift+tab` / `backtab` | Move focus backward |
+| `↑/↓` or `k/j` | Move within focused lists |
+| `enter` | Activate the focused item or continue the current workflow |
+| `r` | Refresh profiles from AWS config |
+| `q` / `ctrl+c` | Quit |
+
+Pages only receive workflow keys after focusing the Pages pane and pressing `enter`.
+
+## Workflows
+
+### AWS profiles and SSO
+
+- Profiles are loaded from AWS shared config/credentials.
+- Non-SSO profiles resolve caller identity with STS.
+- SSO profiles use native OIDC device authorization.
+- Cached SSO sessions are reused when valid.
+- When a new SSO login is required, the app shows the verification URL and one-time code in the TUI.
+
+### S3 sync
+
+The S3 page provides a staged local-to-S3 sync workflow:
+
+1. Select an authenticated profile and region.
+2. Open **S3 Buckets**.
+3. Select a bucket.
+4. Pick a local file or folder.
+5. Enter an optional destination prefix.
+6. Review uploads/deletes/skips.
+7. Optionally enable delete mode.
+8. Confirm and run the sync.
+
+Notes:
+
+- Delete is never implicit; it must be enabled from the review screen.
+- Delete is disabled for single-file sources.
+- Directory sync preserves paths relative to the selected directory.
+- Empty prefix means bucket root.
+- Uploads refresh content and metadata so static website deployments get updated content types/cache headers.
+
+Useful keys:
+
+| Key | Action |
+| --- | --- |
+| `enter` | Select/continue/confirm |
+| `space` | Toggle delete on the review screen |
+| `b` / `esc` | Go back/cancel depending on the stage |
+| `i` | After successful sync, jump to CloudFront invalidation |
+
+### CloudFront invalidation
+
+- List distributions for the active profile/region.
+- Select a distribution.
+- Enter one or more paths, for example `/*` or `/assets/* /index.html`.
+- Create an invalidation and poll until completion.
+- Copy the equivalent AWS CLI command to the clipboard.
+
+### ECR private repositories
+
+- List and search private ECR repositories.
+- Create private repositories.
+- View existing image tags/digests.
+- Discover local Docker images via the Docker Engine API.
+- Push a selected or manually entered local image to ECR.
+
+Docker must be running locally for image discovery and push workflows.
+
+## Safety model
+
+`aws-terminal` is intended to make AWS operations easier without hiding important state transitions:
+
+- Destructive actions use explicit confirmation/review screens.
+- S3 delete must be opted into every run.
+- Long-running AWS operations are cancellable where practical.
+- Async results are scoped to the page/session that started them.
+- The app does not store AWS credentials beyond standard AWS SSO token cache behavior.
+
+## Development
+
+Requirements:
+
+- Go matching `go.mod`
+- Git
+- Optional: Docker for ECR push workflow development
+
+Common commands:
+
+```bash
+go run ./cmd/aws-terminal
+go test ./...
+go build ./...
+```
+
+Format Go changes before committing:
+
+```bash
+gofmt -w <changed-go-files>
+```
+
+## Project structure
+
+```text
+cmd/aws-terminal                         # application entrypoint
+internal/app                             # dependency wiring and Bubble Tea program bootstrap
+internal/domain/*                        # core types only; no UI or AWS SDK imports
+internal/application/*                   # use cases and ports/interfaces
+internal/infrastructure/*                # AWS SDK, Docker, and filesystem adapters
+internal/ui/pageapi                      # shared Page contract and shell/page state
+internal/ui/workflow                     # reusable workflow helpers
+internal/ui/shell                        # main Bubble Tea shell model/update/view
+internal/ui/components                   # shared TUI components
+internal/ui/pages/s3                     # S3 workflow page
+internal/ui/pages/cloudfront             # CloudFront workflow page
+internal/ui/pages/ecr                    # ECR workflow page
+internal/ui/styles                       # shared Lip Gloss theme helpers
+```
+
+Architecture boundaries:
+
+```text
+ui -> application -> domain
+infrastructure -> application/domain
+app wires ui + infrastructure together
+```
+
+AWS SDK imports should stay in `internal/infrastructure` and wiring code, not in domain/application/UI packages.
+
+## Releases
+
+CI runs on pushes to `main` and pull requests.
+
+Release builds run when a version tag is pushed:
+
+```bash
+git tag v0.1.1
+git push origin v0.1.1
+```
+
+The release workflow:
+
+1. Runs tests.
+2. Builds Windows, Linux, and macOS binaries.
+3. Uploads release archives and checksums.
+4. Creates GitHub-generated release notes.
+5. Updates the Homebrew tap and Scoop bucket when `PACKAGE_REPO_TOKEN` is configured.
+
+Use conventional commit messages to improve generated release notes.
+
+## Contributing
+
+Contributions are welcome. Good first contributions include:
+
+- Bug reports with reproduction steps.
+- Documentation improvements.
+- Tests for application-layer behavior.
+- New AWS workflows that preserve the existing architecture boundaries.
+
+Before opening a pull request, run:
+
+```bash
+go test ./...
+go build ./...
+```
+
+## Security
+
+Please avoid opening public issues for sensitive security reports. If you find a vulnerability, contact the maintainer privately first.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
