@@ -281,38 +281,30 @@ func contentTypeForPath(filePath string) string {
 		return ""
 	}
 
+	if contentType, ok := frontendContentTypes[ext]; ok {
+		return contentType
+	}
+
 	if contentType := mime.TypeByExtension(ext); contentType != "" {
 		return contentType
 	}
 
-	switch ext {
-	case ".webmanifest":
-		return "application/manifest+json"
-	case ".map":
-		return "application/json"
-	case ".ico":
-		return "image/x-icon"
-	case ".xml":
-		return "application/xml"
-	case ".txt":
-		return "text/plain; charset=utf-8"
-	case ".md":
-		return "text/markdown; charset=utf-8"
-	case ".avif":
-		return "image/avif"
-	case ".webp":
-		return "image/webp"
-	case ".woff":
-		return "font/woff"
-	case ".woff2":
-		return "font/woff2"
-	case ".ttf":
-		return "font/ttf"
-	case ".otf":
-		return "font/otf"
-	}
-
 	return ""
+}
+
+var frontendContentTypes = map[string]string{
+	".webmanifest": "application/manifest+json",
+	".map":         "application/json",
+	".ico":         "image/x-icon",
+	".xml":         "application/xml",
+	".txt":         "text/plain; charset=utf-8",
+	".md":          "text/markdown; charset=utf-8",
+	".avif":        "image/avif",
+	".webp":        "image/webp",
+	".woff":        "font/woff",
+	".woff2":       "font/woff2",
+	".ttf":         "font/ttf",
+	".otf":         "font/otf",
 }
 
 func (s *Store) client(ctx context.Context, profileName, region string) (*awss3sdk.Client, error) {
