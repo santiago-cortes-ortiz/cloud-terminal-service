@@ -243,6 +243,26 @@ Use real configured profiles and buckets on your own machine.
     aws s3 sync dist/wavycat-frontend-v3/browser s3://wavy-prod/ --delete --profile prod
     ```
 
+## Release process
+
+CI runs on pushes to `main` and pull requests with formatting, tests, and build checks.
+
+Release builds run only when a version tag is pushed:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow runs tests first, then builds archives for:
+
+- Windows amd64
+- Linux amd64
+- macOS arm64
+- macOS amd64
+
+It creates a GitHub Release for the tag, enables GitHub-generated release notes, and uploads the binaries plus checksums. Use conventional commit messages to make the generated changelog more useful.
+
 ## Development status
 
 - The S3, CloudFront, and ECR pages are implemented and wired through the app page registry.
