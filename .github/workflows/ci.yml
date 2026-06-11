@@ -28,6 +28,9 @@ jobs:
         run: |
           test -z "$(gofmt -l .)"
 
+      - name: Validate installer script
+        run: bash -n install.sh
+
       - name: Run tests
         run: go test ./...
 

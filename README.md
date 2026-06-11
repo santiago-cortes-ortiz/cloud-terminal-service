@@ -58,6 +58,39 @@ Concrete page composition lives in `internal/app/pages.go`, so `internal/ui/shel
 
 This keeps the TUI separate from authentication, AWS config loading, and future resource creation services.
 
+## Install
+
+### Install script
+
+macOS and Linux users can install the latest release directly from GitHub Releases:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | bash
+```
+
+To install a specific version or location:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" bash
+```
+
+### Homebrew
+
+```bash
+brew install ShAd0W20/tap/aws-terminal
+```
+
+The tap is updated by the release workflow when `PACKAGE_REPO_TOKEN` is configured and `ShAd0W20/homebrew-tap` exists.
+
+### Scoop
+
+```powershell
+scoop bucket add shadow20 https://github.com/ShAd0W20/scoop-bucket
+scoop install aws-terminal
+```
+
+The Scoop bucket is updated by the release workflow when `PACKAGE_REPO_TOKEN` is configured and `ShAd0W20/scoop-bucket` exists.
+
 ## Run
 
 ```bash
@@ -198,8 +231,8 @@ Use real configured profiles and buckets on your own machine.
 
 ### Example targets
 
-- `pre` profile syncing into `s3://wavy-pre/`
-- `prod` profile syncing into `s3://wavy-prod/`
+- `dev` profile syncing into `s3://example-dev-bucket/`
+- `prod` profile syncing into `s3://example-prod-bucket/`
 
 ### Manual verification checklist
 
@@ -217,7 +250,7 @@ Use real configured profiles and buckets on your own machine.
 7. Use the file picker to select a folder such as:
 
    ```text
-   dist/wavycat-frontend-v3/browser
+   dist/example-app/browser
    ```
 
 8. Leave the prefix empty to target bucket root, or enter a prefix such as:
@@ -231,16 +264,16 @@ Use real configured profiles and buckets on your own machine.
 11. Validate objects in AWS or with the AWS CLI, for example:
 
     ```bash
-    aws s3 ls s3://wavy-pre/ --profile pre
-    aws s3 ls s3://wavy-prod/ --profile prod
+    aws s3 ls s3://example-dev-bucket/ --profile dev
+    aws s3 ls s3://example-prod-bucket/ --profile prod
     ```
 
 12. Run the workflow again with delete **on** only after reviewing the listed deletions.
 13. Compare the behavior with your existing CLI workflow:
 
     ```bash
-    aws s3 sync dist/wavycat-frontend-v3/browser s3://wavy-pre/ --delete --profile pre
-    aws s3 sync dist/wavycat-frontend-v3/browser s3://wavy-prod/ --delete --profile prod
+    aws s3 sync dist/example-app/browser s3://example-dev-bucket/ --delete --profile dev
+    aws s3 sync dist/example-app/browser s3://example-prod-bucket/ --delete --profile prod
     ```
 
 ## Release process
@@ -262,6 +295,13 @@ The release workflow runs tests first, then builds archives for:
 - macOS amd64
 
 It creates a GitHub Release for the tag, enables GitHub-generated release notes, and uploads the binaries plus checksums. Use conventional commit messages to make the generated changelog more useful.
+
+If the `PACKAGE_REPO_TOKEN` secret is configured, the release workflow also updates:
+
+- `ShAd0W20/homebrew-tap` with `Formula/aws-terminal.rb`
+- `ShAd0W20/scoop-bucket` with `bucket/aws-terminal.json`
+
+To enable package repository updates, create those two repositories and add a fine-grained GitHub token named `PACKAGE_REPO_TOKEN` to this repository's Actions secrets with write access to both package repositories.
 
 ## Development status
 

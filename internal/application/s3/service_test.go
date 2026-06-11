@@ -53,7 +53,7 @@ func TestBuildSyncPlanDirectoryKeysMatchAWSSyncToBucketRoot(t *testing.T) {
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:    "pre",
 		Region:     "us-east-1",
-		Bucket:     "wavy-pre",
+		Bucket:     "example-bucket",
 		SourcePath: source,
 	})
 	if err != nil {
@@ -81,7 +81,7 @@ func TestBuildSyncPlanDirectoryKeysMatchAWSSyncToPrefix(t *testing.T) {
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:    "pre",
 		Region:     "us-east-1",
-		Bucket:     "wavy-pre",
+		Bucket:     "example-bucket",
 		Prefix:     "/preview/site/",
 		SourcePath: source,
 	})
@@ -106,7 +106,7 @@ func TestBuildSyncPlanDefaultsToFullRefresh(t *testing.T) {
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:    "pre",
-		Bucket:     "wavy-pre",
+		Bucket:     "example-bucket",
 		SourcePath: source,
 	})
 	if err != nil {
@@ -134,7 +134,7 @@ func TestBuildSyncPlanStaticWebsitePresetAppliesUploadMetadata(t *testing.T) {
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:             "pre",
-		Bucket:              "wavy-pre",
+		Bucket:              "example-bucket",
 		SourcePath:          source,
 		StaticWebsitePreset: true,
 	})
@@ -167,7 +167,7 @@ func TestBuildSyncPlanOptimizedModeSkipsSameSizeRemoteObject(t *testing.T) {
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:            "pre",
-		Bucket:             "wavy-pre",
+		Bucket:             "example-bucket",
 		SourcePath:         source,
 		UploadPlanningMode: domains3.UploadPlanningModeSizeOnly,
 	})
@@ -192,7 +192,7 @@ func TestBuildSyncPlanOptimizedModeUploadsDifferentSizeRemoteObject(t *testing.T
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:            "pre",
-		Bucket:             "wavy-pre",
+		Bucket:             "example-bucket",
 		SourcePath:         source,
 		UploadPlanningMode: domains3.UploadPlanningModeSizeOnly,
 	})
@@ -219,7 +219,7 @@ func TestBuildSyncPlanDeletePlanningUnderSelectedPrefix(t *testing.T) {
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:       "pre",
-		Bucket:        "wavy-pre",
+		Bucket:        "example-bucket",
 		Prefix:        "site",
 		SourcePath:    source,
 		DeleteEnabled: true,
@@ -244,7 +244,7 @@ func TestExecuteSyncEmitsByteProgress(t *testing.T) {
 
 	result, err := service.ExecuteSync(context.Background(), domains3.SyncPlan{
 		Profile: "pre",
-		Bucket:  "wavy-pre",
+		Bucket:  "example-bucket",
 		Uploads: []domains3.SyncUpload{{Key: "app.js", LocalPath: "app.js", Size: 5}},
 	}, progressCh)
 	close(progressCh)
@@ -276,7 +276,7 @@ func TestExecuteSyncDeletesInBatches(t *testing.T) {
 
 	result, err := service.ExecuteSync(context.Background(), domains3.SyncPlan{
 		Profile:       "pre",
-		Bucket:        "wavy-pre",
+		Bucket:        "example-bucket",
 		DeleteEnabled: true,
 		Deletes:       deletes,
 	}, nil)
@@ -301,7 +301,7 @@ func TestBuildSyncPlanDoesNotDeleteWhenToggleDisabled(t *testing.T) {
 
 	plan, err := service.BuildSyncPlan(context.Background(), BuildSyncPlanInput{
 		Profile:       "pre",
-		Bucket:        "wavy-pre",
+		Bucket:        "example-bucket",
 		SourcePath:    source,
 		DeleteEnabled: false,
 	})

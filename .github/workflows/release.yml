@@ -23,6 +23,9 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Validate installer script
+        run: bash -n install.sh
+
       - name: Run tests
         run: go test ./...
 
@@ -30,6 +33,10 @@ jobs:
     name: Build and publish release
     runs-on: ubuntu-latest
     needs: test
+    env:
+      PACKAGE_REPO_TOKEN: ${{ secrets.PACKAGE_REPO_TOKEN }}
+      HOMEBREW_TAP_REPOSITORY: ShAd0W20/homebrew-tap
+      SCOOP_BUCKET_REPOSITORY: ShAd0W20/scoop-bucket
 
     steps:
       - name: Checkout
@@ -93,3 +100,132 @@ jobs:
             dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout Homebrew tap
+        if: ${{ env.PACKAGE_REPO_TOKEN != '' }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ env.HOMEBREW_TAP_REPOSITORY }}
+          token: ${{ env.PACKAGE_REPO_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update Homebrew formula
+        if: ${{ env.PACKAGE_REPO_TOKEN != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          base_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}"
+
+          checksum() {
+            local asset="$1"
+            awk -v asset="$asset" '$2 == asset { print $1; exit }' dist/checksums.txt
+          }
+
+          darwin_arm64="aws-terminal_${tag}_darwin_arm64.tar.gz"
+          darwin_amd64="aws-terminal_${tag}_darwin_amd64.tar.gz"
+          linux_amd64="aws-terminal_${tag}_linux_amd64.tar.gz"
+
+          mkdir -p homebrew-tap/Formula
+          cat > homebrew-tap/Formula/aws-terminal.rb <<EOF
+          class AwsTerminal < Formula
+            desc "Terminal UI for creating and managing AWS resources"
+            homepage "https://github.com/${GITHUB_REPOSITORY}"
+            version "${version}"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "${base_url}/${darwin_arm64}"
+                sha256 "$(checksum "${darwin_arm64}")"
+              else
+                url "${base_url}/${darwin_amd64}"
+                sha256 "$(checksum "${darwin_amd64}")"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.intel?
+                url "${base_url}/${linux_amd64}"
+                sha256 "$(checksum "${linux_amd64}")"
+              else
+                odie "aws-terminal only publishes Linux amd64 release assets for now"
+              end
+            end
+
+            def install
+              bin.install "aws-terminal"
+            end
+
+            test do
+              assert_predicate bin/"aws-terminal", :exist?
+            end
+          end
+          EOF
+
+          ruby -pi -e 'gsub(/^ {10}/, "")' homebrew-tap/Formula/aws-terminal.rb
+
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/aws-terminal.rb
+          git diff --cached --quiet && exit 0
+          git commit -m "aws-terminal ${tag}"
+          git push
+
+      - name: Checkout Scoop bucket
+        if: ${{ env.PACKAGE_REPO_TOKEN != '' }}
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ env.SCOOP_BUCKET_REPOSITORY }}
+          token: ${{ env.PACKAGE_REPO_TOKEN }}
+          path: scoop-bucket
+
+      - name: Update Scoop manifest
+        if: ${{ env.PACKAGE_REPO_TOKEN != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          asset="aws-terminal_${tag}_windows_amd64.zip"
+          hash="$(awk -v asset="$asset" '$2 == asset { print $1; exit }' dist/checksums.txt)"
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${asset}"
+
+          mkdir -p scoop-bucket/bucket
+          cat > scoop-bucket/bucket/aws-terminal.json <<EOF
+          {
+              "version": "${version}",
+              "description": "Terminal UI for creating and managing AWS resources",
+              "homepage": "https://github.com/${GITHUB_REPOSITORY}",
+              "architecture": {
+                  "64bit": {
+                      "url": "${url}",
+                      "hash": "${hash}"
+                  }
+              },
+              "bin": "aws-terminal.exe",
+              "checkver": {
+                  "github": "https://github.com/${GITHUB_REPOSITORY}"
+              },
+              "autoupdate": {
+                  "architecture": {
+                      "64bit": {
+                          "url": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v\$version/aws-terminal_v\$version_windows_amd64.zip"
+                      }
+                  }
+              }
+          }
+          EOF
+
+          ruby -pi -e 'gsub(/^ {10}/, "")' scoop-bucket/bucket/aws-terminal.json
+
+          cd scoop-bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bucket/aws-terminal.json
+          git diff --cached --quiet && exit 0
+          git commit -m "aws-terminal ${tag}"
+          git push
