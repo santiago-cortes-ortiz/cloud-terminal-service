@@ -9,6 +9,16 @@ A keyboard-first terminal UI for working with AWS resources from your local shel
 
 `aws-terminal` uses your existing AWS profiles, supports native AWS SSO device-flow login, and provides guided workflows for common AWS tasks without requiring you to remember every CLI command.
 
+## Screenshots
+
+### Dashboard
+
+![aws-terminal dashboard](docs/screenshots/dashboard.png)
+
+### S3 sync review
+
+![aws-terminal S3 sync review](docs/screenshots/s3-review.png)
+
 ## Features
 
 - Discover AWS profiles from shared config/credentials files.
