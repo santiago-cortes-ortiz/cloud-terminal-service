@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml)
 [![Release](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml)
-[![Latest release](https://img.shields.io/github/v/release/ShAd0W20/aws-terminal?sort=semver)](https://github.com/ShAd0W20/aws-terminal/releases/latest)
+[![Latest release](https://badgen.net/github/release/ShAd0W20/aws-terminal)](https://github.com/ShAd0W20/aws-terminal/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A keyboard-first terminal UI for working with AWS resources from your local shell.
