@@ -1,0 +1,40 @@
+package awsecs
+
+import (
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	ecstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+)
+
+func TestTaskFromSDKUsesContainerNetworkInterfacePrivateIP(t *testing.T) {
+	task := taskFromSDK(ecstypes.Task{
+		TaskArn: aws.String("arn:aws:ecs:eu-west-1:123:task/backend/abc123"),
+		Containers: []ecstypes.Container{{
+			Name: aws.String("app"),
+			NetworkInterfaces: []ecstypes.NetworkInterface{{
+				PrivateIpv4Address: aws.String("10.0.18.21"),
+			}},
+		}},
+	})
+
+	if task.PrivateIP != "10.0.18.21" {
+		t.Fatalf("PrivateIP = %q, want 10.0.18.21", task.PrivateIP)
+	}
+}
+
+func TestTaskFromSDKFallsBackToAttachmentPrivateIP(t *testing.T) {
+	task := taskFromSDK(ecstypes.Task{
+		TaskArn: aws.String("arn:aws:ecs:eu-west-1:123:task/backend/abc123"),
+		Attachments: []ecstypes.Attachment{{
+			Details: []ecstypes.KeyValuePair{{
+				Name:  aws.String("privateIPv4Address"),
+				Value: aws.String("10.0.19.68"),
+			}},
+		}},
+	})
+
+	if task.PrivateIP != "10.0.19.68" {
+		t.Fatalf("PrivateIP = %q, want 10.0.19.68", task.PrivateIP)
+	}
+}

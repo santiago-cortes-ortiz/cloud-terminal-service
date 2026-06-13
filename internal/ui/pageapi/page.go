@@ -45,6 +45,13 @@ type StatusProvider interface {
 	PageStatus(state State) Status
 }
 
+// FocusedInputProvider is optional. Pages implement it when they own text
+// inputs/search fields so the shell can let printable keys reach the page
+// before global single-key shortcuts such as r/q.
+type FocusedInputProvider interface {
+	HasFocusedInput() bool
+}
+
 type Page interface {
 	ID() string
 	Title() string

@@ -156,6 +156,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.paletteOpen {
 			return m, m.updatePalette(msg)
 		}
+		if m.focus == focusPage && m.currentPageHasFocusedInput() && pageInputOwnsKey(msg) && msg.Type != tea.KeyCtrlC && !key.Matches(msg, m.keys.Focus) && !key.Matches(msg, m.keys.BackFocus) {
+			return m, m.currentPageUpdateCmd(msg)
+		}
 		switch {
 		case key.Matches(msg, m.keys.Palette):
 			m.openPalette()
@@ -218,6 +221,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m Model) currentPageHasFocusedInput() bool {
+	provider, ok := m.currentPage().(pages.FocusedInputProvider)
+	return ok && provider.HasFocusedInput()
+}
+
+func pageInputOwnsKey(msg tea.KeyMsg) bool {
+	switch msg.Type {
+	case tea.KeyRunes, tea.KeySpace, tea.KeyBackspace, tea.KeyDelete, tea.KeyEsc, tea.KeyEnter:
+		return true
+	default:
+		return false
+	}
 }
 
 func (m *Model) toggleFocus() tea.Cmd {

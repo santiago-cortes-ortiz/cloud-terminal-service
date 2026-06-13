@@ -11,7 +11,9 @@ import (
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	awssdkconfig "github.com/aws/aws-sdk-go-v2/config"
 	awscloudfrontsdk "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awsec2sdk "github.com/aws/aws-sdk-go-v2/service/ec2"
 	awsecrsdk "github.com/aws/aws-sdk-go-v2/service/ecr"
+	awsecssdk "github.com/aws/aws-sdk-go-v2/service/ecs"
 	awss3sdk "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
@@ -72,6 +74,8 @@ type Factory struct {
 	s3Clients         map[string]*awss3sdk.Client
 	cloudFrontClients map[string]*awscloudfrontsdk.Client
 	ecrClients        map[string]*awsecrsdk.Client
+	ecsClients        map[string]*awsecssdk.Client
+	ec2Clients        map[string]*awsec2sdk.Client
 	stsClients        map[string]*sts.Client
 }
 
@@ -86,6 +90,8 @@ func NewFactoryWithOptions(options Options) *Factory {
 		s3Clients:         map[string]*awss3sdk.Client{},
 		cloudFrontClients: map[string]*awscloudfrontsdk.Client{},
 		ecrClients:        map[string]*awsecrsdk.Client{},
+		ecsClients:        map[string]*awsecssdk.Client{},
+		ec2Clients:        map[string]*awsec2sdk.Client{},
 		stsClients:        map[string]*sts.Client{},
 	}
 }
@@ -254,6 +260,62 @@ func (f *Factory) ECR(ctx context.Context, profileName, region string) (*awsecrs
 		return existing, nil
 	}
 	f.ecrClients[key] = client
+	f.mu.Unlock()
+	return client, nil
+}
+
+func (f *Factory) EC2(ctx context.Context, profileName, region string) (*awsec2sdk.Client, error) {
+	if f == nil {
+		f = Default()
+	}
+	key := CacheKey(profileName, region)
+	f.mu.RLock()
+	client, ok := f.ec2Clients[key]
+	f.mu.RUnlock()
+	if ok {
+		return client, nil
+	}
+
+	cfg, err := f.Config(ctx, profileName, region)
+	if err != nil {
+		return nil, err
+	}
+	client = awsec2sdk.NewFromConfig(cfg)
+
+	f.mu.Lock()
+	if existing, ok := f.ec2Clients[key]; ok {
+		f.mu.Unlock()
+		return existing, nil
+	}
+	f.ec2Clients[key] = client
+	f.mu.Unlock()
+	return client, nil
+}
+
+func (f *Factory) ECS(ctx context.Context, profileName, region string) (*awsecssdk.Client, error) {
+	if f == nil {
+		f = Default()
+	}
+	key := CacheKey(profileName, region)
+	f.mu.RLock()
+	client, ok := f.ecsClients[key]
+	f.mu.RUnlock()
+	if ok {
+		return client, nil
+	}
+
+	cfg, err := f.Config(ctx, profileName, region)
+	if err != nil {
+		return nil, err
+	}
+	client = awsecssdk.NewFromConfig(cfg)
+
+	f.mu.Lock()
+	if existing, ok := f.ecsClients[key]; ok {
+		f.mu.Unlock()
+		return existing, nil
+	}
+	f.ecsClients[key] = client
 	f.mu.Unlock()
 	return client, nil
 }
