@@ -1,23 +1,27 @@
-# aws-terminal
+# cloud-terminal-service
 
-[![CI](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/ci.yml)
-[![Release](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml/badge.svg)](https://github.com/ShAd0W20/aws-terminal/actions/workflows/release.yml)
-[![Latest release](https://badgen.net/github/release/ShAd0W20/aws-terminal)](https://github.com/ShAd0W20/aws-terminal/releases/latest)
+[![CI](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/actions/workflows/ci.yml/badge.svg)](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/actions/workflows/ci.yml)
+[![Release](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/actions/workflows/release.yml/badge.svg)](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/actions/workflows/release.yml)
+[![Latest release](https://badgen.net/github/release/santiago-cortes-ortiz/cloud-terminal-service)](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**Maintainer:** [santiago-cortes-ortiz](https://github.com/santiago-cortes-ortiz)
+
+Fork of [ShAd0W20/aws-terminal](https://github.com/ShAd0W20/aws-terminal). This repository is maintained independently as **cloud-terminal-service**; new features, fixes, and releases are published here.
 
 A keyboard-first terminal UI for working with AWS resources from your local shell.
 
-`aws-terminal` uses your existing AWS profiles, supports native AWS SSO device-flow login, and provides guided workflows for common AWS tasks without requiring you to remember every CLI command.
+`cloud-terminal-service` uses your existing AWS profiles, supports native AWS SSO device-flow login, and provides guided workflows for common AWS tasks without requiring you to remember every CLI command.
 
 ## Screenshots
 
 ### Dashboard
 
-![aws-terminal dashboard](docs/screenshots/dashboard.png)
+![cloud-terminal-service dashboard](docs/screenshots/dashboard.png)
 
 ### S3 sync review
 
-![aws-terminal S3 sync review](docs/screenshots/s3-review.png)
+![cloud-terminal-service S3 sync review](docs/screenshots/s3-review.png)
 
 ## Features
 
@@ -33,34 +37,31 @@ A keyboard-first terminal UI for working with AWS resources from your local shel
 
 ## Install
 
-### macOS and Linux install script
+### From source (recommended for this fork)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | bash
+git clone https://github.com/santiago-cortes-ortiz/cloud-terminal-service.git
+cd cloud-terminal-service
+go run ./cmd/aws-terminal
 ```
 
-Install a specific version or location:
+Build a local binary:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ShAd0W20/aws-terminal/main/install.sh | VERSION=v0.1.1 INSTALL_DIR="$HOME/.local/bin" bash
+go build -o cloud-terminal-service ./cmd/aws-terminal
 ```
 
-### Homebrew
+### Prebuilt binaries
 
-```bash
-brew install ShAd0W20/tap/aws-terminal
-```
+Download prebuilt binaries from the [latest release in this repository](https://github.com/santiago-cortes-ortiz/cloud-terminal-service/releases/latest) when available.
 
-### Scoop
+### Upstream install options
 
-```powershell
-scoop bucket add shadow20 https://github.com/ShAd0W20/scoop-bucket
-scoop install aws-terminal
-```
+The original project also publishes install scripts, Homebrew, and Scoop packages:
 
-### Manual download
-
-Download prebuilt binaries from the [latest GitHub Release](https://github.com/ShAd0W20/aws-terminal/releases/latest).
+- [ShAd0W20/aws-terminal releases](https://github.com/ShAd0W20/aws-terminal/releases/latest)
+- `brew install ShAd0W20/tap/aws-terminal`
+- Scoop: `scoop bucket add shadow20 https://github.com/ShAd0W20/scoop-bucket` then `scoop install aws-terminal`
 
 Published targets:
 
@@ -72,7 +73,7 @@ Published targets:
 ## Quick start
 
 ```bash
-aws-terminal
+cloud-terminal-service
 ```
 
 Or run from source:
@@ -163,7 +164,7 @@ Docker must be running locally for image discovery and push workflows.
 
 ## Safety model
 
-`aws-terminal` is intended to make AWS operations easier without hiding important state transitions:
+`cloud-terminal-service` is intended to make AWS operations easier without hiding important state transitions:
 
 - Destructive actions use explicit confirmation/review screens.
 - S3 delete must be opted into every run.
@@ -196,7 +197,7 @@ gofmt -w <changed-go-files>
 ## Project structure
 
 ```text
-cmd/aws-terminal                         # application entrypoint
+cmd/aws-terminal                         # application entrypoint (binary: cloud-terminal-service)
 internal/app                             # dependency wiring and Bubble Tea program bootstrap
 internal/domain/*                        # core types only; no UI or AWS SDK imports
 internal/application/*                   # use cases and ports/interfaces
@@ -260,8 +261,12 @@ go build ./...
 
 ## Security
 
-Please avoid opening public issues for sensitive security reports. If you find a vulnerability, contact the maintainer privately first.
+Please avoid opening public issues for sensitive security reports. If you find a vulnerability, contact the maintainer ([santiago-cortes-ortiz](https://github.com/santiago-cortes-ortiz)) privately first.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Attribution
+
+This project is a fork of [aws-terminal](https://github.com/ShAd0W20/aws-terminal) by [ShAd0W20](https://github.com/ShAd0W20), maintained here as **cloud-terminal-service** by [santiago-cortes-ortiz](https://github.com/santiago-cortes-ortiz).
